@@ -13,12 +13,12 @@ jobs:
       # Install dependencies
       - run:
           name: Install Dependencies
-          command: npm install
+          command: docker build -t $DOCKERHUB_USERNAME/react-test -f ./client/Dockerfile.dev ./client
 
       # Run Tests
       - run:
           name: Run Tests
-          command: npm test -- --coverage
+          command: docker run $DOCKERHUB_USERNAME/react-test npm test -- --coverage
 
   deploy_to_dockerhub:
     docker:
@@ -28,11 +28,6 @@ jobs:
 
     steps:
       - checkout
-
-      # Install dependencies
-      - run:
-          name: Install Dependencies
-          command: docker build -t $DOCKERHUB_USERNAME/nodejs-app -f Dockerfile .
 
       # Build and push to DockerHub
       - run:
