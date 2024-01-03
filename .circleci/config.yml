@@ -29,6 +29,7 @@ jobs:
 
     steps:
       - checkout
+      - setup_remote_docker
 
       # Build and push to DockerHub
       - run:
