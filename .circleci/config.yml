@@ -46,6 +46,11 @@ jobs:
             docker push $DOCKERHUB_USERNAME/multi-server
             docker push $DOCKERHUB_USERNAME/multi-worker
 
+      # Install ElasticBeanstalk CLI
+      - run:
+          name: Install EB Deployment Dependencies
+          command: python3 -m pip install --upgrade --user awsebcli
+
       - run:
           name: Deploy to ElasticBeanstalk
           command: |
