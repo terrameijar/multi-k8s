@@ -57,7 +57,7 @@ jobs:
             aws configure set aws_access_key_id $AWS_ACCESS_KEY
             aws configure set aws_secret_access_key $AWS_SECRET_KEY
             aws configure set region $AWS_REGION
-            eb init multi-docker --region $AWS_REGION --platform "ECS running on 64bit Amazon Linux 2023"
+            eb init multi-docker --region $AWS_REGION --platform "Docker"
             eb use Multi-docker-env
             eb deploy
 
