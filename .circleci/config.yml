@@ -21,7 +21,7 @@ jobs:
           name: Run Tests
           command: docker run $DOCKERHUB_USERNAME/react-test npm test -- --coverage
 
-  deploy_to_dockerhub:
+  deploy_to_dockerhub_and_aws:
     docker:
       - image: cimg/aws:2023.12
 
@@ -65,7 +65,7 @@ workflows:
   build_and_deploy:
     jobs:
       - build
-      - deploy_to_dockerhub:
+      - deploy_to_dockerhub_and_aws:
           requires:
             - build
           filters:
