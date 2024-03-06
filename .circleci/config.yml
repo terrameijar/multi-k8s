@@ -34,12 +34,18 @@ jobs:
       - run:
           name: Build and Push to DockerHub
           command: |
-            docker build -t $DOCKERHUB_USERNAME/multi-client ./client
-            docker build -t $DOCKERHUB_USERNAME/multi-server ./server
-            docker build -t $DOCKERHUB_USERNAME/multi-worker ./worker
-            docker push $DOCKERHUB_USERNAME/multi-client
-            docker push $DOCKERHUB_USERNAME/multi-server
-            docker push $DOCKERHUB_USERNAME/multi-worker
+            docker build -t $DOCKERHUB_USERNAME/multi-client:latest -t $DOCKERHUB_USERNAME/multi-client:$CIRCLE_SHA1 ./client
+            docker build -t $DOCKERHUB_USERNAME/multi-server:latest -t $DOCKERHUB_USERNAME/multi-server:$CIRCLE_SHA1 ./server
+            docker build -t $DOCKERHUB_USERNAME/multi-worker:latest -t $DOCKERHUB_USERNAME/multi-worker:$CIRCLE_SHA1 ./worker
+
+
+            docker push $DOCKERHUB_USERNAME/multi-server:latest
+            docker push $DOCKERHUB_USERNAME/multi-client:latest
+            docker push $DOCKERHUB_USERNAME/multi-worker:latest
+
+            docker push $DOCKERHUB_USERNAME/multi-server:$CIRCLE_SHA1
+            docker push $DOCKERHUB_USERNAME/multi-client:$CIRCLE_SHA1
+            docker push $DOCKERHUB_USERNAME/multi-worker:$CIRCLE_SHA1
 
       - run:
           name: GKE Login
