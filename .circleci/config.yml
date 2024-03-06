@@ -1,0 +1,73 @@
+version: 2.1
+
+jobs:
+  build_and_test:
+    docker:
+      - image: google/cloud-sdk
+
+    working_directory: ~/app
+
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Install Dependencies
+          command: docker build -t $DOCKERHUB_USERNAME/react-test -f ./client/Dockerfile.dev ./client
+
+      - run:
+          name: Run Tests
+          command: docker run $DOCKERHUB_USERNAME/react-test npm test -- --coverage
+
+  deploy_to_dockerhub_and_gke:
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/app
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: DockerHub Login
+          command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+      - run:
+          name: Build and Push to DockerHub
+          command: |
+            docker build -t $DOCKERHUB_USERNAME/multi-client ./client
+            docker build -t $DOCKERHUB_USERNAME/multi-server ./server
+            docker build -t $DOCKERHUB_USERNAME/multi-worker ./worker
+            docker push $DOCKERHUB_USERNAME/multi-client
+            docker push $DOCKERHUB_USERNAME/multi-server
+            docker push $DOCKERHUB_USERNAME/multi-worker
+
+      - run:
+          name: GKE Login
+          command: |
+            echo $GKE_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud --quiet config set project $GKE_PROJECT
+            gcloud --quiet config set compute/zone $GKE_COMPUTE_ZONE
+            gcloud --quiet container clusters get-credentials $GKE_CLUSTER
+
+      - run:
+          name: Deploy to GKE
+          command: |
+            kubectl apply -f k8s
+            kubectl set image deployments/server-deployment server=$DOCKERHUB_USERNAME/multi-server:$CIRCLE_SHA1
+            kubectl set image deployments/client-deployment client=$DOCKERHUB_USERNAME/multi-client:$CIRCLE_SHA1
+            kubectl set image deployments/worker-deployment worker=$DOCKERHUB_USERNAME/multi-worker:$CIRCLE_SHA1
+
+workflows:
+  version: 2
+  build_test_deploy:
+    jobs:
+      - build_and_test
+      - deploy_to_dockerhub_and_gke:
+          requires:
+            - build_and_test
+          filters:
+            branches:
+              only:
+                - main
+                - kubernetes
